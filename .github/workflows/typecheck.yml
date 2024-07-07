@@ -1,23 +1,32 @@
 name: Check code with TypeScript
 
 on:
-  pull_request:
+  push:
     branches:
       - 'master'
+  schedule:
+    - cron:  '0 8 * * 0'
 
 # Cancel old builds on new commit for same workflow + branch/PR
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   typecheck:
+    name: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ubicloud-standard-2, ubicloud-standard-4, ubicloud-standard-8, ubicloud-standard-16, ubicloud-standard-30]
     # Uses larger hosted runner as it significantly decreases build times
-    runs-on: [larger-runner-4cpu]
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Show cpu info
+        run: lscpu
 
       - name: Use Node.js
         uses: actions/setup-node@v4
